@@ -180,65 +180,67 @@ def route_json_completeness(ctx: Context, node_input: dict) -> Event:
 
 async def request_details(ctx: Context, node_input: str):
     """Yields RequestInput to pause workflow for doctor feedback and loops back once resumed."""
-    loop_count = ctx.state.get("loop_count", 0) + 1
-    ctx.state["loop_count"] = loop_count
-    interrupt_id = f"clarify_{loop_count}"
+    current_loop = ctx.state.get("loop_count", 0)
+    interrupt_id = f"clarify_{current_loop}"
 
-    if not ctx.resume_inputs or interrupt_id not in ctx.resume_inputs:
-        yield RequestInput(
-            interrupt_id=interrupt_id,
-            message=(
-                f"The medical record is too vague (Score: {ctx.state.get('completeness_score')}/100).\n"
-                f"Missing Details needed: {node_input}\n"
-                f"Please provide the missing details to continue:"
-            ),
+    if current_loop > 0 and ctx.resume_inputs and interrupt_id in ctx.resume_inputs:
+        additional_details = ctx.resume_inputs[interrupt_id]
+        updated_text = (
+            f"{ctx.state.get('input_text')}\n[Additional Details]: {additional_details}"
         )
+        ctx.state["input_text"] = updated_text
+        yield Event(output=updated_text, route="resumed")
         return
 
-    # Once resumed, append new details to the original text input
-    additional_details = ctx.resume_inputs[interrupt_id]
-    updated_text = (
-        f"{ctx.state.get('input_text')}\n[Additional Details]: {additional_details}"
-    )
-    ctx.state["input_text"] = updated_text
+    new_loop = current_loop + 1
+    ctx.state["loop_count"] = new_loop
+    new_interrupt_id = f"clarify_{new_loop}"
 
-    yield Event(output=updated_text, route="resumed")
+    yield RequestInput(
+        interrupt_id=new_interrupt_id,
+        message=(
+            f"The medical record is too vague (Score: {ctx.state.get('completeness_score')}/100).\n"
+            f"Missing Details needed: {node_input}\n"
+            f"Please provide the missing details to continue:"
+        ),
+    )
 
 
 async def request_json_details(ctx: Context, node_input: str):
     """Yields RequestInput to pause workflow for JSON feedback and loops back once resumed."""
-    loop_count = ctx.state.get("loop_count", 0) + 1
-    ctx.state["loop_count"] = loop_count
-    interrupt_id = f"clarify_json_{loop_count}"
+    current_loop = ctx.state.get("loop_count", 0)
+    interrupt_id = f"clarify_json_{current_loop}"
 
-    if not ctx.resume_inputs or interrupt_id not in ctx.resume_inputs:
-        yield RequestInput(
-            interrupt_id=interrupt_id,
-            message=(
-                f"The JSON medical record is incomplete (Score: {ctx.state.get('completeness_score')}/100).\n"
-                f"Missing Details needed: {node_input}\n"
-                f"Please provide the missing details to continue:"
-            ),
-        )
+    if current_loop > 0 and ctx.resume_inputs and interrupt_id in ctx.resume_inputs:
+        additional_details = ctx.resume_inputs[interrupt_id]
+        existing_input = ctx.state.get("raw_input")
+        if isinstance(existing_input, dict) and "original_json" in existing_input:
+            old_details = existing_input.get("additional_details", "")
+            combined_details = f"{old_details}\n{additional_details}" if old_details else additional_details
+            ctx.state["raw_input"] = {
+                "original_json": existing_input["original_json"],
+                "additional_details": combined_details,
+            }
+        else:
+            ctx.state["raw_input"] = {
+                "original_json": existing_input,
+                "additional_details": additional_details,
+            }
+        yield Event(output=ctx.state["raw_input"], route="resumed")
         return
 
-    # Once resumed, update raw_input to a dict containing original_json and the additional details
-    additional_details = ctx.resume_inputs[interrupt_id]
-    existing_input = ctx.state.get("raw_input")
-    if isinstance(existing_input, dict) and "original_json" in existing_input:
-        old_details = existing_input.get("additional_details", "")
-        combined_details = f"{old_details}\n{additional_details}" if old_details else additional_details
-        ctx.state["raw_input"] = {
-            "original_json": existing_input["original_json"],
-            "additional_details": combined_details,
-        }
-    else:
-        ctx.state["raw_input"] = {
-            "original_json": existing_input,
-            "additional_details": additional_details,
-        }
+    new_loop = current_loop + 1
+    ctx.state["loop_count"] = new_loop
+    new_interrupt_id = f"clarify_json_{new_loop}"
 
-    yield Event(output=ctx.state["raw_input"], route="resumed")
+    yield RequestInput(
+        interrupt_id=new_interrupt_id,
+        message=(
+            f"The JSON medical record is incomplete (Score: {ctx.state.get('completeness_score')}/100).\n"
+            f"Missing Details needed: {node_input}\n"
+            f"Please provide the missing details to continue:"
+        ),
+    )
 
 
 # LLM agent to convert human readable clinical text to standards JSON
