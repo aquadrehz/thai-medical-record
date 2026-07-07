@@ -91,6 +91,56 @@ Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
 This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
 See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.
 
+## 🧪 Testing with Example Prompts in ADK Dev UI
+
+A set of pre-configured test prompts is available in the [`example_prompts/`](file:///Users/gee/igy_projects/thai-medical-records/example_prompts/) directory. You can use these to test and verify different pathways of the agent workflow.
+
+### How to Start the Playground
+
+1. Spin up the local development playground:
+   ```bash
+   agents-cli playground
+   ```
+2. Open the URL provided in the console (usually `http://127.0.0.1:8080/dev-ui/?app=app`).
+3. Click **New Session** to start a clean test.
+
+---
+
+### Scenario 1: Complete Text -> Standards JSON (100% Score Pathway)
+* **Goal**: Verifying that a detailed clinical narrative skips the clarification loop, goes straight to confirmation, and translates to FHIR / TMT / SNOMED CT JSON.
+* **Test File**: [`example_prompts/human_full_th.txt`](file:///Users/gee/igy_projects/thai-medical-records/example_prompts/human_full_th.txt)
+* **Steps**:
+  1. Open a new session.
+  2. Copy the entire contents of [`human_full_th.txt`](file:///Users/gee/igy_projects/thai-medical-records/example_prompts/human_full_th.txt) and send it as the first message.
+  3. The agent will respond with a **Clinical Summary** and ask you to confirm.
+  4. Type **`ยืนยัน`** or **`confirm`** and press Send.
+  5. The agent will output the completed standards JSON block mapping to TMT codes, ICD-10, and FHIR resource bundles.
+
+---
+
+### Scenario 2: Multi-Turn Conversation (HITL Loop & Accumulation)
+* **Goal**: Verifying that the agent halts on vague details, asks for specific missing data, accumulates state across turns, and generates the final JSON.
+* **Test Files**: Line-by-line inputs from [`example_prompts/human_partial_en.txt`](file:///Users/gee/igy_projects/thai-medical-records/example_prompts/human_partial_en.txt) (English) or partial Thai entries.
+* **Steps**:
+  1. Send: `คนไข้ชายปวดหัวตุบๆมาหลายวันแล้ว กินยาพาราเองก็ไม่หาย`
+  2. The agent will assess completeness (~40%), pause, and display the missing details requested (e.g. age, dosage, duration).
+  3. Send the next detail: `อายุ 38 ไม่มีโรคประจำตัว ปวดคลัสเตอร์ ทานไป 1 เม็ด 50 mg`
+  4. The agent will parse, merge the details into the existing record state, and ask you to clarify remaining gaps (e.g. drug name, duration).
+  5. Send the final missing pieces: `เพศชาย para 50 mg ปวดหัวมา 3 วันแล้ว`
+  6. The agent will generate the summary. Type **`confirm`** or **`ยืนยัน`** to finalize and retrieve the generated standards JSON block.
+
+---
+
+### Scenario 3: Standards JSON -> Human Translation
+* **Goal**: Verifying that sending structured FHIR or standard coding JSON translates it back to human-readable Thai/English.
+* **Test File**: [`example_prompts/med_json_en.txt`](file:///Users/gee/igy_projects/thai-medical-records/example_prompts/med_json_en.txt)
+* **Steps**:
+  1. Copy the JSON payload inside [`med_json_en.txt`](file:///Users/gee/igy_projects/thai-medical-records/example_prompts/med_json_en.txt).
+  2. Send it as the first message.
+  3. Confirm the parsed clinical details, and see the agent translate the payload back to a clear, professional clinician summary in Thai.
+
+---
+
 ## Implemented Architecture & Project Concept
 
 ### Concept
