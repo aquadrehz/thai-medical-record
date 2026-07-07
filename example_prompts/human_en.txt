@@ -1,0 +1,18 @@
+Patient: Mr. Somchai Deejai, National ID 1100100123456, Male, Age 41, DOB 1985-05-12. Data obtained from direct patient interview and hospital medical records.
+
+Chief complaint: High fever 39.2°C, severe headache, nausea, vomiting x2 episodes, for 3 days.
+
+Diagnosis: Dengue Fever, ICD-10 code A90.
+
+Laboratory results:
+- CBC: Platelets 85,000/μL (low), WBC 3,200/μL, Hct 42%
+- Fasting Blood Glucose: 98 mg/dL (normal)
+- Dengue NS1 Antigen: Positive
+
+Treatment:
+- IV Normal Saline 1,000 mL drip rate 80 mL/hr
+- Paracetamol 500 mg, 1 tablet PO every 4-6 hours PRN fever
+- Ondansetron 4 mg IV every 8 hours for nausea
+
+Attending physician: Dr. Wichai Raksadee, Internal Medicine, Siriraj Hospital
+Date of visit: 7 July 2026

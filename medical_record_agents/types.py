@@ -13,6 +13,10 @@ class WorkflowState(BaseModel):
     standards_output: Optional["StandardsOutput"] = None
     human_translation: Optional["HumanTranslationOutput"] = None
     loop_count: int = 0
+    confirmed: bool = False
+    summary_text: Optional[str] = None
+    processed_interrupts: list[str] = Field(default_factory=list)
+
 
 class CompletenessResult(BaseModel):
     """Schema for the LLM completeness assessor."""
@@ -53,7 +57,7 @@ class StandardsOutput(BaseModel):
 class HumanTranslationOutput(BaseModel):
     """Schema for the LLM human language translator."""
     translation: str = Field(
-        description="The human-readable translation of the medical record in the requested language (default to English)."
+        description="The human-readable translation of the medical record in the requested language (default to Thai)."
     )
 
 WorkflowState.model_rebuild()

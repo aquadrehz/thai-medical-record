@@ -146,6 +146,6 @@ In accordance with the [Competition-Specific Rules (Section 2)](https://www.kagg
 ## Built For
 Kaggle x Google AI Agents Intensive Vibe Coding Capstone 2026 Track: Agents for Good
 
-Thai Medical Record — The first step for medical record data records.
+Thai Medical Record Agent — The first step toward interoperable medical data records for Thai Healthcare.
 
 
